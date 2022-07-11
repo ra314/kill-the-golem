@@ -3,7 +3,9 @@ extends KinematicBody2D
 var velocity := Vector2()
 var is_rolling := false
 var is_attacking := false
+var can_damage = false
 var stamina := 100.0
+var attacks_left := 0
 onready var anim = $AnimationTree.get("parameters/playback")
 
 # Stats
@@ -14,8 +16,6 @@ var hp := 3
 var defense := 1
 var attack := 1
 const STAMINA_NEEDED_FOR_ROLL := 20
-
-
 
 func _physics_process(delta):
 	regen_stamina()
@@ -38,12 +38,12 @@ func _physics_process(delta):
 	# Attack
 	if Input.is_action_just_pressed("ui_x"):
 		is_attacking = true
+		attacks_left = 1
 
 	# Equipment
 	$Sword.set_frame($Sprite.get_frame())
 	
 	move_and_slide(velocity)
-	print(is_rolling)
 
 # Stamina Regen
 func regen_stamina() -> void:
@@ -68,14 +68,23 @@ func finish_rolling() -> void:
 
 func finish_attacking() -> void:
 	is_attacking = false
+	can_damage = false
+	attacks_left = 0
 	
+func attack_active():
+	can_damage = true
+
 func move(move_right: bool) -> void:
 	if move_right:
 		velocity.x = speed
 		$Camera2D.offset_h = lerp($Camera2D.offset_h, 0, 0.2)
+		get_node("Area2D/Swordhitbox").position.x = 26
+		get_node("Area2D/Swordhitbox").position.y = 25
 	else:
 		velocity.x = -speed
 		$Camera2D.offset_h = lerp($Camera2D.offset_h, -0.8, 0.2)
+		get_node("Area2D/Swordhitbox").position.x = 8
+		get_node("Area2D/Swordhitbox").position.y = 25
 	$Sprite.flip_h = !move_right
 	$Sword.flip_h = !move_right
 	if !is_attacking:
